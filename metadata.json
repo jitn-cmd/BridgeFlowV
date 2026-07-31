@@ -1,0 +1,6 @@
+{
+  "name": "BridgeFlowV",
+  "description": "Business Solutions Consultancy Platform connecting companies with specialized legal, financial, marketing, software, AI, and operational experts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

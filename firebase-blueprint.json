@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "settings": {
+      "title": "Settings",
+      "description": "Website global configuration settings",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "tagline": { "type": "string" }
+      }
+    },
+    "messages": {
+      "title": "Messages & Leads",
+      "description": "Contact form submissions and Find Solution quiz leads",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "company": { "type": "string" },
+        "department": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "submittedAt": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["name", "email", "department", "message", "submittedAt", "status"]
+    }
+  }
+}
