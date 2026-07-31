@@ -33,7 +33,9 @@ export const initialSettings: WebsiteSettings = {
     github: "https://github.com/bridgeflowv"
   },
   footerDescription: "BridgeFlowV is a business solutions consultancy platform. We help businesses connect with elite experts, vetted partner agencies, and dedicated outsourced teams to accelerate operational excellence.",
-  copyrightText: "© 2026 BridgeFlowV Consultancy Services. All rights reserved."
+  copyrightText: "© 2026 BridgeFlowV Consultancy Services. All rights reserved.",
+  adminPasskey: "BridgeFlowV@2026",
+  adminRecoveryCode: "RECOVERY-BRIDGEFLOW-2026"
 };
 
 export const initialSolutions: SolutionCategory[] = [

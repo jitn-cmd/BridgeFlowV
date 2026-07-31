@@ -165,6 +165,8 @@ export interface WebsiteSettings {
   };
   footerDescription: string;
   copyrightText: string;
+  adminPasskey?: string;
+  adminRecoveryCode?: string;
 }
 
 export interface FAQItem {

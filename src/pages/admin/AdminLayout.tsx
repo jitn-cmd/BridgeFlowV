@@ -15,7 +15,13 @@ import {
   Key, 
   RotateCcw,
   Sparkles,
-  Award
+  Award,
+  HelpCircle,
+  ShieldCheck,
+  CheckCircle2,
+  X,
+  RefreshCw,
+  Mail
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -31,22 +37,83 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     setCurrentPage,
     showToast,
     resetAllData,
-    messages
+    messages,
+    settings,
+    updateSettings
   } = useApp();
 
   const [passcode, setPasscode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [passError, setPassError] = useState(false);
+
+  // Forgot / Reset Passkey Modal States
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [recoveryInput, setRecoveryInput] = useState('');
+  const [newPasskeyInput, setNewPasskeyInput] = useState('');
+  const [confirmPasskeyInput, setConfirmPasskeyInput] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default passkey for demo is 'admin123' or any submission in quick demo mode
-    if (passcode === 'admin123' || passcode.trim() !== '') {
+    const envPasskey = (import.meta as unknown as { env?: { VITE_ADMIN_PASSKEY?: string } }).env?.VITE_ADMIN_PASSKEY;
+    const targetKey = settings.adminPasskey || envPasskey || 'BridgeFlowV@2026';
+    
+    if (passcode.trim() === targetKey) {
       setAdminAuthenticated(true);
       setPassError(false);
-      showToast("Authenticated as BridgeFlowV Admin!", "success");
+      showToast("Authenticated successfully as BridgeFlowV Admin!", "success");
     } else {
       setPassError(true);
+      showToast("Invalid Admin Passkey! Access Denied.", "error");
     }
+  };
+
+  const handleResetPasskey = (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+
+    const expectedRecoveryCode = settings.adminRecoveryCode || 'RECOVERY-BRIDGEFLOW-2026';
+    const expectedEmail = (settings.contactEmail || 'jitendra.codeflies@gmail.com').toLowerCase().trim();
+    const userInput = recoveryInput.trim().toLowerCase();
+
+    if (!recoveryInput.trim()) {
+      setResetError('Please enter your Master Recovery Code or Admin Email.');
+      return;
+    }
+
+    if (userInput !== expectedRecoveryCode.toLowerCase() && userInput !== expectedEmail) {
+      setResetError('Invalid Recovery Code or Admin Email address. Please check and try again.');
+      return;
+    }
+
+    if (!newPasskeyInput || newPasskeyInput.trim().length < 5) {
+      setResetError('New passkey must be at least 5 characters long.');
+      return;
+    }
+
+    if (newPasskeyInput.trim() !== confirmPasskeyInput.trim()) {
+      setResetError('New passkey and confirmation passkey do not match.');
+      return;
+    }
+
+    // Save updated admin passkey
+    updateSettings({
+      ...settings,
+      adminPasskey: newPasskeyInput.trim()
+    });
+
+    setResetSuccess(true);
+    showToast("Admin Passkey successfully reset & saved!", "success");
+
+    setTimeout(() => {
+      setAdminAuthenticated(true);
+      setIsResetOpen(false);
+      setResetSuccess(false);
+      setRecoveryInput('');
+      setNewPasskeyInput('');
+      setConfirmPasskeyInput('');
+    }, 1200);
   };
 
   const newMessagesCount = messages.filter(m => m.status === 'new').length;
@@ -65,61 +132,181 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   if (!adminAuthenticated) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl text-slate-100">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6 shadow-2xl text-slate-100 relative">
           
           <div className="text-center space-y-2">
             <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center mx-auto">
               <Lock className="w-6 h-6 text-cyan-400" />
             </div>
             <h2 className="text-2xl font-extrabold text-white">BridgeFlowV Admin Portal</h2>
-            <p className="text-xs text-slate-400">Enter administrator passkey to manage platform content & leads.</p>
+            <p className="text-xs text-slate-400">Enter secure administrator passkey to access control panel.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Admin Passkey</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300">Admin Security Passkey</label>
+                <button
+                  type="button"
+                  onClick={() => setIsResetOpen(true)}
+                  className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline font-semibold flex items-center space-x-1"
+                >
+                  <HelpCircle className="w-3 h-3" />
+                  <span>Forgot Passkey?</span>
+                </button>
+              </div>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
-                  placeholder="Enter passcode (Demo: admin123)"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  onChange={(e) => {
+                    setPasscode(e.target.value);
+                    if (passError) setPassError(false);
+                  }}
+                  placeholder="Enter administrator passkey"
+                  className={`w-full bg-slate-950 border ${passError ? 'border-rose-500' : 'border-slate-800'} rounded-xl pl-9 pr-10 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500 transition-colors`}
                 />
                 <Key className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
               </div>
-              {passError && <p className="text-[11px] text-rose-400 mt-1">Invalid passcode. Please try again.</p>}
+              {passError && (
+                <div className="mt-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px] flex items-center justify-between">
+                  <span>⚠️ Incorrect passkey. Try again or use Forgot Passkey.</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsResetOpen(true)}
+                    className="text-cyan-400 underline font-bold ml-2"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 active:scale-[0.99] transition-transform"
             >
-              Authenticate & Unlock
+              Authenticate & Unlock Portal
             </button>
           </form>
 
-          <div className="pt-4 border-t border-slate-800 text-center space-y-2">
-            <button
-              onClick={() => {
-                setPasscode('admin123');
-                setAdminAuthenticated(true);
-                showToast("Quick Demo Access Granted!");
-              }}
-              className="text-xs text-cyan-400 hover:underline font-semibold"
-            >
-              Instant Quick Demo Login (Fill 'admin123')
-            </button>
-            <br />
+          <div className="pt-4 border-t border-slate-800 text-center">
             <button
               onClick={() => setCurrentPage('home')}
-              className="text-xs text-slate-500 hover:text-slate-300"
+              className="text-xs text-slate-400 hover:text-cyan-400 transition-colors"
             >
               ← Return to Public Website
             </button>
           </div>
 
         </div>
+
+        {/* Forgot Passkey / Reset Modal */}
+        {isResetOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full space-y-5 relative shadow-2xl">
+              <button
+                onClick={() => setIsResetOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Reset Admin Passkey</h3>
+                  <p className="text-xs text-slate-400">Verify recovery code or admin email to set a new passkey.</p>
+                </div>
+              </div>
+
+              {resetSuccess ? (
+                <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
+                  <h4 className="text-sm font-bold text-white">Passkey Reset Successful!</h4>
+                  <p className="text-xs text-emerald-300">Logging you in automatically with your new admin credentials...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleResetPasskey} className="space-y-4">
+                  {/* Recovery Code or Admin Email */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                      Master Recovery Code or Admin Email
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={recoveryInput}
+                        onChange={(e) => setRecoveryInput(e.target.value)}
+                        placeholder="RECOVERY-BRIDGEFLOW-2026 or admin email"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500"
+                      />
+                      <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      💡 Default Recovery Code: <code className="text-cyan-400 bg-slate-950 px-1 py-0.5 rounded border border-slate-800">RECOVERY-BRIDGEFLOW-2026</code> or registered email ({settings.contactEmail || 'jitendra.codeflies@gmail.com'})
+                    </p>
+                  </div>
+
+                  {/* New Passkey */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">New Admin Passkey</label>
+                    <input
+                      type="password"
+                      value={newPasskeyInput}
+                      onChange={(e) => setNewPasskeyInput(e.target.value)}
+                      placeholder="Enter new passkey (min 5 chars)"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  {/* Confirm New Passkey */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Confirm New Passkey</label>
+                    <input
+                      type="password"
+                      value={confirmPasskeyInput}
+                      onChange={(e) => setConfirmPasskeyInput(e.target.value)}
+                      placeholder="Re-enter new passkey"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  {resetError && (
+                    <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium">
+                      ⚠️ {resetError}
+                    </div>
+                  )}
+
+                  <div className="pt-2 flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsResetOpen(false)}
+                      className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold uppercase tracking-wider shadow-lg shadow-cyan-500/20"
+                    >
+                      Verify & Reset
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -218,3 +405,4 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     </div>
   );
 };
+

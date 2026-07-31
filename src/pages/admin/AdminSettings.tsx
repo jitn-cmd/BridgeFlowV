@@ -189,6 +189,48 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
+        {/* Admin Passkey & Security */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider border-b border-slate-800 pb-2 flex items-center space-x-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Admin Portal Security & Passkey</span>
+          </h4>
+
+          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1 text-xs">
+                Custom Administrator Passkey
+              </label>
+              <input
+                type="text"
+                value={formData.adminPasskey || 'BridgeFlowV@2026'}
+                onChange={(e) => setFormData(prev => ({ ...prev, adminPasskey: e.target.value }))}
+                placeholder="Set custom admin passkey"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                🔒 Changing this passkey updates the administrator password required to unlock the Admin Portal.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-900">
+              <label className="block text-slate-300 font-semibold mb-1 text-xs">
+                Master Recovery Code (For Forgot Passkey)
+              </label>
+              <input
+                type="text"
+                value={formData.adminRecoveryCode || 'RECOVERY-BRIDGEFLOW-2026'}
+                onChange={(e) => setFormData(prev => ({ ...prev, adminRecoveryCode: e.target.value }))}
+                placeholder="Set master recovery code"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-amber-300 font-mono focus:outline-none focus:border-amber-500"
+              />
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                🔑 Emergency recovery secret key used to reset your admin passkey if forgotten. You can also use your admin email (<span className="text-cyan-400">{formData.contactEmail}</span>) to reset.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="pt-4 border-t border-slate-800 flex justify-end">
           <button
             type="submit"
